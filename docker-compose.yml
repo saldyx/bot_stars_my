@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  bot:
+    build: .
+    container_name: bot_stars_my
+    command: python main.py
+    restart: always
+    ports:
+      - "8084:8080"
+    volumes:
+      - ./:/app
