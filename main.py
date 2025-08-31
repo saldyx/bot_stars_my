@@ -37,7 +37,7 @@ try:
     from config.states import *
     
     # Импорты моделей (через обратную совместимость)
-    from database_refactored import *
+    from database import *
     
     # Импорты сервисов
     from services.user_service import UserService
