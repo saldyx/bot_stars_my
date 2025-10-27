@@ -1,3 +1,7 @@
+"""
+Главный файл Telegram бота - Pixel Stars
+Рефакторинг для улучшения структуры кода
+"""
 import asyncio
 import random
 import time
@@ -9,37 +13,53 @@ import string
 import json
 import hashlib
 
-from typing import Union
+from typing import Union, List, Tuple, Optional, Callable, Dict, Any, Awaitable
 from flyerapi import Flyer
 from collections import deque
-from typing import List, Tuple
-from typing import Optional, Callable, Dict, Any, Awaitable
 from aiogram import Bot, Dispatcher, Router, types, F, BaseMiddleware
-from aiogram.filters import CommandStart, StateFilter
-from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, InputFile, LabeledPrice, \
-    PreCheckoutQuery, BufferedInputFile
+from aiogram.filters import CommandStart, StateFilter, Command
+from aiogram.types import (Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, 
+                          InputFile, LabeledPrice, PreCheckoutQuery, BufferedInputFile,
+                          ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove)
 from aiogram.types.input_file import FSInputFile
 from aiogram.exceptions import (
     TelegramAPIError, TelegramBadRequest, TelegramNotFound, TelegramForbiddenError,
     TelegramConflictError, TelegramUnauthorizedError, TelegramRetryAfter, TelegramMigrateToChat
 )
-from typing import Callable, Dict, Any, Awaitable
 from datetime import datetime, timedelta
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
+# Импорты настроек и конфигурации
 try:
-    from database import *
     from settings import *
-    from userbot_gifts import schedule_gift, start_userbot, stop_userbot
+    from config.states import *
+    
+    # Импорты моделей (через обратную совместимость)
     from database import *
+    
+    # Импорты сервисов
+    from services.user_service import UserService
+    from services.task_service import TaskService
+    from services.payment_service import PaymentService, WithdrawalService, PromoCodeService
+    from services.game_service import GameService, LotteryService, BoostService, ClickService, DailyGiftService
+    from services.channel_service import ChannelService
+    from services.utm_service import UTMService, StatisticsService
+    from services.external_api import SubgramService, GramAdsService
+    from services.subscription_service import SubscriptionService
+    
+    # Импорты утилит
+    from utils.helpers import get_random_value, generate_channel_link, hash_flyer_task, format_time_remaining
+    from utils.captcha import generate_captcha, create_captcha_keyboard
+    from utils.middleware import AntiFloodMiddleware
+    from utils.flyer_integration import get_flyer_tasks, check_flyer_task
+    
+    # Импорты для работы с подарками
+    from userbot_gifts import schedule_gift, start_userbot, stop_userbot
+    
 except ImportError as e:
-    print(
-        f"Ошибка импорта: {e}. Пожалуйста, убедитесь, что файлы database.py, settings.py и database_additions.py существуют и находятся в правильном месте.")
+    print(f"Ошибка импорта: {e}. Убедитесь, что все модули находятся в правильных местах.")
     exit()
 
 flyer = Flyer(FLYER_KEY)
